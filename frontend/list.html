@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Son Kayıtlar</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        #userTable {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        #userTable th, #userTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 14px;
+        }
+        #userTable th {
+            background-color: #8e84dd;
+            color: white;
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        #logoutButton {
+            margin-bottom: 20px;
+            background-color: #a44848;
+        }
+        #logoutButton:hover {
+            background-color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="main-title">SON KAYITLAR SAYFASI</h1>
+    
+    <div class="container" style="max-width: 800px;"> 
+          
+        <table id="userTable">
+            <thead>
+                <tr>
+                      <th>Id </th>
+                    <th>Ad </th>
+                       <th>Mail </th>
+                    <th>Telefon</th>
+                    <th>Kayıt Tarihi</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                <tr><td colspan="5" style="text-align:center;">Kayıtlar yükleniyor...</td></tr>
+            </tbody>
+        </table>
+
+         <button id="logoutButton">Çıkış Yap</button>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('authToken');
+
+        if (!token) {
+            alert("Bu sayfaya erişim için giriş yapmalısınız.");
+            window.location.href = 'index.html';
+        }
+
+        async function fetchUsers() {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Veriler çekiliyor...</td></tr>';
+            
+            try {
+                const response = await fetch('/api/registrations', {
+                    headers: {
+                        'Authorization': `Bearer ${token}` 
+                    }
+                });
+                
+                if (!response.ok) { 
+                    throw new Error("Veri çekilemedi. Lütfen tekrar giriş yapın."); 
+                }
+
+                const users = await response.json();
+                tbody.innerHTML = '';
+
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="padding:10px; text-align:center;">Henüz kayıt yok.</td></tr>';
+                    return;
+                }
+
+                users.forEach(user => {
+                    const tr = document.createElement('tr');
+                    
+                    const date = new Date(user.created_at).toLocaleString('tr-TR', { 
+                        year: 'numeric', month: 'short', day: 'numeric', 
+                        hour: '2-digit', minute: '2-digit' 
+                    }); 
+                    
+                    tr.innerHTML = `
+                        <td>${user.id}</td>
+                         <td>${user.name}</td>
+                         <td>${user.email}</td>
+                        <td>${user.phone}</td>
+                        <td>${date}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (err) {
+                console.error("Listeleme Hatası:", err);
+                tbody.innerHTML = `<tr><td colspan="3" style="padding:10px; text-align:center; color:red;">Hata: Veriler yüklenemedi (${err.message}).</td></tr>`;
+                
+                localStorage.removeItem('authToken'); 
+            }
+        }
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('authToken'); 
+            window.location.href = 'index.html'; 
+        });
+
+        fetchUsers();
+    </script>
+</body>
+</html>

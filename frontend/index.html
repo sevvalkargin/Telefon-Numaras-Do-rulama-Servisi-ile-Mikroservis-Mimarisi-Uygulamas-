@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Kayıt Formu </title>
+    <link rel="stylesheet" href="style.css">
+  
+</head>
+<body>
+    <h1 id="main-title">KASABAMIZA HOŞGELDİNİZ</h1>
+    
+    <div class="container" id="mainContainer"> 
+       
+        
+      <h2> Kayıt Formu</h2>
+        
+        <form id="unifiedForm"> 
+            <input type="text" id="name" placeholder="Ad Soyad" required>
+            <input type="email" id="email" placeholder="E-posta Adresi" required>
+            <input type="text" id="phone" placeholder="Telefon (6 haneli)" maxlength="6" required>
+            <button type="submit" id="submitButton">İşlemi Tamamla</button>
+        </form>
+        
+        <div id="message" class="message-box"></div>
+         <h3>Kasabadaki Geçerli Telefon Numarası Sayısı</h3>
+        <p id="validCountDisplay">Hesaplanıyor...</p>
+    
+    </div>
+    </div>
+
+    <script>
+        document.getElementById('unifiedForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitButton');
+            const originalText = btn.innerText;
+            btn.innerText = 'İşleniyor...';
+            btn.disabled = true;
+
+            // Verileri al
+            const data = {
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim()
+            };
+
+            const msgDiv = document.getElementById('message');
+            msgDiv.style.display = 'none';
+            msgDiv.className = 'message-box'; 
+
+            try {
+                const response = await fetch('/api/registration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                msgDiv.style.display = 'block';
+                msgDiv.innerText = result.message;
+
+                if (result.status === 'admin_success') {
+                    msgDiv.classList.add('success');
+                    localStorage.setItem('authToken', result.token); 
+                    btn.innerText = "Yönlendiriliyor...";
+                    window.location.href = 'list.html'; 
+                    return; 
+                } 
+                else if (response.status === 201 || result.status === 'accepted') {
+                    msgDiv.classList.add('success');
+                    document.getElementById('unifiedForm').reset(); 
+                } 
+                else {
+                    msgDiv.classList.add('error');
+                    document.getElementById('phone').value = ''; 
+                }
+
+            } catch (err) {
+                console.error("İşlem Hatası:", err);
+                msgDiv.style.display = 'block';
+                msgDiv.innerText = "Sunucu bağlantı hatası!";
+                msgDiv.classList.add('error');
+            } finally {
+                if(window.location.href.indexOf('list.html') === -1) {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            }
+        });
+
+async function fetchValidCount() {
+    const countDisplay = document.getElementById('validCountDisplay');
+    try {
+        const response = await fetch('/api/phone/count');
+        const result = await response.json();
+        
+        if (response.ok) {
+            countDisplay.innerText = result.totalValidNumbers;
+          /*  countDisplay.style.fontWeight = 'bold';
+            countDisplay.style.fontSize = '1.5em';
+            countDisplay.style.color = '#38008c';*/ // Rengi belirginleştirelim
+        } else {
+            countDisplay.innerText = "Hata: Sayı alınamadı.";
+        }
+    } catch (err) {
+        console.error("Geçerli Sayı Çekme Hatası:", err);
+        countDisplay.innerText = "Hata: Sunucuya bağlanılamadı.";
+    }
+}
+fetchValidCount();
+    </script>
+</body>
+</html>
