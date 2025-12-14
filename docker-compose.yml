@@ -34,7 +34,7 @@ services:
     build: ./frontend
     restart: always
     ports:
-      - "80:80"  # Tarayıcıdan http://localhost adresine girilecek
+      - "80:80"  
     volumes:
       - ./frontend:/usr/share/nginx/html
     depends_on:

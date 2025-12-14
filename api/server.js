@@ -113,7 +113,6 @@ app.get('/api/phone/count', (req, res) => {
 });
 
 app.get('/api/registrations', (req, res) => {
-// Düzeltme: Tabloda göstermek istediğiniz tüm alanları çekin.
 const query = 'SELECT id, name, email, phone, created_at FROM registrations ORDER BY id DESC LIMIT 10';    
     db.query(query, (err, results) => {
         if (err) {

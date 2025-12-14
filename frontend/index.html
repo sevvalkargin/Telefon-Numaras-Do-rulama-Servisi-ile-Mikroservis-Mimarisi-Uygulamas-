@@ -38,7 +38,6 @@
             btn.innerText = 'İşleniyor...';
             btn.disabled = true;
 
-            // Verileri al
             const data = {
                 name: document.getElementById('name').value.trim(),
                 email: document.getElementById('email').value.trim(),
@@ -98,9 +97,6 @@ async function fetchValidCount() {
         
         if (response.ok) {
             countDisplay.innerText = result.totalValidNumbers;
-          /*  countDisplay.style.fontWeight = 'bold';
-            countDisplay.style.fontSize = '1.5em';
-            countDisplay.style.color = '#38008c';*/ // Rengi belirginleştirelim
         } else {
             countDisplay.innerText = "Hata: Sayı alınamadı.";
         }
